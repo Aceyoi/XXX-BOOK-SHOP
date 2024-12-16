@@ -1,15 +1,25 @@
+/* Общие стили */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #d6e6f2;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 header {
-    background-color: #4CAF50;
+    background-color: #8ac9f4;
     color: white;
-    padding: 1rem;
     text-align: center;
     position: relative;
     display: flex;
@@ -21,6 +31,7 @@ header h1 {
     margin: 0;
     flex-grow: 1;
     text-align: center;
+    font-size: 1.5rem; /* Уменьшен размер шрифта */
 }
 
 .auth-container {
@@ -47,10 +58,9 @@ header h1 {
     display: none;
     position: absolute;
     width: 150px;
-    height: 108px;
-    top: 300%;
-    right: -10px;
-    background-color: #4CAF50;
+    top: 100%;
+    right: 0;
+    background-color: #8ac9f4;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 10000;
     border-radius: 10px; /* Закругление углов */
@@ -95,24 +105,32 @@ nav ul li a {
 
 main {
     display: flex;
+    flex-grow: 1;
     padding: 1rem;
 }
 
 .sidebar {
     width: 200px;
     height: 435px;
-    background-color: #4CAF50;
+    background-color: #8ac9f4;
     color: white;
-    padding: 1rem;
+    padding: 2rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     position: relative;
     border-radius: 25px; /* Закругление углов */
+    text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .search-container {
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
+    position: absolute;
+    left: 17px;
 }
 
 .search-container input {
@@ -162,11 +180,11 @@ main {
     padding: 0;
     margin: 0;
     position: absolute;
-    left: 45%;
-    top: -200%;
-    background-color: #4CAF50;
+    left: 100%;
+    top: 0;
+    background-color: #8ac9f4;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    width: 200px;
     z-index: 1000;
 }
 
@@ -194,7 +212,6 @@ main {
 #slider-and-offers {
     display: flex;
     justify-content: space-between;
-    /*margin: 2rem auto;*/
     width: 100%;
     max-width: 1600px;
     margin-left: 15px; /* Сдвигаем слайдер левее */
@@ -204,9 +221,7 @@ main {
 #slider {
     position: relative;
     width: 100%;
-    /*max-width: 80000px;*/
     overflow: hidden;
-
 }
 
 .slider-container {
@@ -217,7 +232,6 @@ main {
 .slide {
     min-width: 100%;
     height: 467px;
-    width: 100px;
     background-size: cover;
     background-position: center;
 }
@@ -272,13 +286,94 @@ main {
 }
 
 footer {
-    background-color: #4CAF50;
+    background-color: #8ac9f4;
     color: white;
     text-align: center;
     padding: 1rem;
     position: fixed;
     width: 100%;
     bottom: 0;
+    position: relative; /* Изменено на relative */
+}
+
+/* Стили для книги */
+#book-details {
+    display: flex;
+    flex-direction: row;
+    margin: 2rem;
+}
+
+.book-image {
+    flex: 1;
+    margin-right: 2rem;
+}
+
+.book-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.book-info {
+    flex: 2;
+}
+
+.book-info h2 {
+    margin-bottom: 1rem;
+}
+
+.book-info p {
+    margin-bottom: 0.5rem;
+}
+
+.buy-button {
+    background-color: #8ac9f4;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.buy-button:hover {
+    background-color: #8ac9f4;
+}
+
+.book-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.book {
+    flex: 1 1 200px; /* Гибкий размер для книг */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: center;
+    padding: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #deeaff; /*f4faff*/
+}
+
+.book img {
+    width: 50%;
+    height: 200px; /* Фиксированная высота для изображений обложек */
+    object-fit: cover; /* Сохранение пропорций изображения */
+    border-radius: 10px;
+}
+
+.book h3 {
+    margin: 0.5rem 0;
+}
+
+.book p {
+    margin: 0.25rem 0;
+}
+
+.book del {
+    text-decoration: line-through;
+    color: #ccc;
 }
 
 /* Стили для горячих объявлений */
@@ -293,7 +388,7 @@ footer {
 
 .offer {
     width: 500px;
-    background-color: white;
+    background-color: #deeaff; /*f4faff*/
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin: 20px;
@@ -320,4 +415,8 @@ footer {
     font-size: 1rem;
 }
 
+.logo {
+    width: 200px; /* Установите желаемую ширину */
+    height: auto; /* Сохраняет пропорции изображения */
+}
 

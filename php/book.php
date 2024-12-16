@@ -1,29 +1,26 @@
 <?php
 include 'config.php';
 
-$query = isset($_GET['query']) ? $_GET['query'] : '';
-$genre = isset($_GET['genre']) ? $_GET['genre'] : '';
-$discount = isset($_GET['discount']) ? true : false;
+if (isset($_GET['id'])) {
+    $book_id = $_GET['id'];
+    $sql = "SELECT books.*, discounts.discount FROM books LEFT JOIN discounts ON books.id = discounts.book_id WHERE books.id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $book_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-if (!empty($query)) {
-    $sql = "SELECT books.*, discounts.discount FROM books LEFT JOIN discounts ON books.id = discounts.book_id WHERE books.title LIKE ? OR books.author LIKE ? OR books.genre LIKE ?";
-    $stmt = $conn->prepare($sql);
-    $likeQuery = '%' . $query . '%';
-    $stmt->bind_param("sss", $likeQuery, $likeQuery, $likeQuery);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} elseif (!empty($genre)) {
-    $sql = "SELECT books.*, discounts.discount FROM books LEFT JOIN discounts ON books.id = discounts.book_id WHERE books.genre = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $genre);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} elseif ($discount) {
-    $sql = "SELECT books.*, discounts.discount FROM books JOIN discounts ON books.id = discounts.book_id";
-    $result = $conn->query($sql);
+    if ($result->num_rows > 0) {
+        $book = $result->fetch_assoc();
+        $discount = isset($book['discount']) ? $book['discount'] : 0;
+        $old_price = $book['price'];
+        $new_price = $old_price - ($old_price * $discount / 100);
+    } else {
+        echo "Книга не найдена.";
+        exit();
+    }
 } else {
-    $sql = "SELECT books.*, discounts.discount FROM books LEFT JOIN discounts ON books.id = discounts.book_id";
-    $result = $conn->query($sql);
+    echo "Неверный запрос.";
+    exit();
 }
 ?>
 
@@ -32,7 +29,7 @@ if (!empty($query)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты поиска - XXXBookShop</title>
+    <title><?php echo isset($book['title']) ? htmlspecialchars($book['title']) : 'Книга не найдена'; ?> - XXXBookShop</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -77,12 +74,13 @@ if (!empty($query)) {
                         <a href="#">Категории</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
+                            include '../php/config.php';
                             $genresQuery = "SELECT DISTINCT genre FROM books";
                             $genresResult = $conn->query($genresQuery);
 
                             if ($genresResult->num_rows > 0) {
                                 while ($genreRow = $genresResult->fetch_assoc()) {
-                                    echo '<li><a href="search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
+                                    echo '<li><a href="../php/search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
                                 }
                             } else {
                                 echo '<li>Нет доступных жанров</li>';
@@ -92,38 +90,30 @@ if (!empty($query)) {
                     </li>
                     <li>
                         <i class="fas fa-tags"></i>
-                        <a href="search.php?discount=true">Акции</a>
+                        <a href="../php/search.php?discount=true">Акции</a>
                     </li>
                 </ul>
             </aside>
-            <section id="books">
-                <div id="book-container" class="book-grid">
-                    <?php
-                    if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $discount = isset($row['discount']) ? $row['discount'] : 0;
-                            $old_price = $row['price'];
-                            $new_price = $old_price - ($old_price * $discount / 100);
-                            echo '<div class="book">';
-                            echo '<a href="book.php?id=' . $row['id'] . '">';
-                            echo '<img src="../images/' . htmlspecialchars($row['image']) . '" alt="' . htmlspecialchars($row['title']) . '">';
-                            echo '</a>';
-                            echo '<h3>' . htmlspecialchars($row["title"]) . '</h3>';
-                            echo '<p>' . htmlspecialchars($row['author']) . '</p>';
-                            if ($discount > 0) {
-                                echo '<p><del>' . htmlspecialchars($old_price) . ' руб.</del> ' . htmlspecialchars($new_price) . ' руб.</p>';
-                            } else {
-                                echo '<p>' . htmlspecialchars($row['price']) . ' руб.</p>';
-                            }
-                            echo '<p>' . htmlspecialchars($row['description']) . '</p>';
-                            echo '<p>' . htmlspecialchars($row['genre']) . '</p>';
-                            echo '</div>';
-                        }
-                    } else {
-                        echo 'Книги не найдены.';
-                    }
-                    ?>
-                </div>
+            <section id="book-details">
+                <?php if (isset($book)): ?>
+                    <div class="book-image">
+                        <img src="../images/<?php echo htmlspecialchars($book['image']); ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
+                    </div>
+                    <div class="book-info">
+                        <h2><?php echo htmlspecialchars($book['title']); ?></h2>
+                        <p><strong>Автор:</strong> <?php echo htmlspecialchars($book['author']); ?></p>
+                        <?php if ($discount > 0): ?>
+                            <p><strong>Цена:</strong> <del><?php echo htmlspecialchars($old_price); ?> руб.</del> <?php echo htmlspecialchars($new_price); ?> руб.</p>
+                        <?php else: ?>
+                            <p><strong>Цена:</strong> <?php echo htmlspecialchars($book['price']); ?> руб.</p>
+                        <?php endif; ?>
+                        <p><strong>Описание:</strong> <?php echo htmlspecialchars($book['description']); ?></p>
+                        <p><strong>Жанр:</strong> <?php echo htmlspecialchars($book['genre']); ?></p>
+                        <button class="buy-button">Купить</button>
+                    </div>
+                <?php else: ?>
+                    <p>Книга не найдена.</p>
+                <?php endif; ?>
             </section>
         </main>
         <footer>

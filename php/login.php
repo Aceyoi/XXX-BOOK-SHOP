@@ -2,26 +2,27 @@
 session_start();
 include 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE username = :username AND password = :password";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['username' => $username, 'password' => $password]);
-    $user = $stmt->fetch();
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? OR nickname = ? LIMIT 1");
+    $stmt->bind_param("ss", $username, $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($user) {
-        $_SESSION['username'] = $username;
-        $_SESSION['nickname'] = $user['nickname'];
-        header('Location: ../index.php');
-        exit();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['username'] = $user['nickname'];
+            $_SESSION['user_id'] = $user['id'];
+            header("Location: ../index.php");
+            exit();
+        } else {
+            echo "Неверный пароль.";
+        }
     } else {
-        header('Location: ../index.php?error=invalid_credentials');
-        exit();
+        echo "Пользователь не найден.";
     }
-} else {
-    header('Location: ../index.php');
-    exit();
 }
 ?>

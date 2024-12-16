@@ -1,35 +1,31 @@
 <?php
 include 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nickname = $_POST['nickname'];
-    $username = $_POST['username'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
+    $first_name = $_POST['first_name'];
+    $last_name = $_POST['last_name'];
+    $middle_name = $_POST['middle_name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
 
     if ($password !== $confirm_password) {
-        header('Location: ../index.php?error=password_mismatch');
+        echo "Пароли не совпадают.";
         exit();
     }
 
-    $sql = "SELECT * FROM users WHERE username = :username";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['username' => $username]);
-    $existingUser = $stmt->fetch();
+    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
-    if ($existingUser) {
-        header('Location: ../index.php?error=username_taken');
-        exit();
+    $stmt = $conn->prepare("INSERT INTO users (nickname, first_name, last_name, middle_name, password, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssss", $nickname, $first_name, $last_name, $middle_name, $hashed_password, $email, $phone);
+
+    if ($stmt->execute()) {
+        echo "Регистрация успешна.";
+        header("Location: ../index.php");
+    } else {
+        echo "Ошибка регистрации: " . $stmt->error;
     }
-
-    $sql = "INSERT INTO users (nickname, username, password) VALUES (:nickname, :username, :password)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['nickname' => $nickname, 'username' => $username, 'password' => $password]);
-
-    header('Location: ../index.php?success=registration_success');
-    exit();
-} else {
-    header('Location: ../index.php');
-    exit();
 }
 ?>
