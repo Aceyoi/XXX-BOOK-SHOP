@@ -36,7 +36,6 @@
                     echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
                     echo '<div id="user-menu">
                             <ul>
-                                <li><a href="php/user.php"> Аккаунт</a></li>
                                 <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
                                 <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: ' . $user['wallet'] . ' руб.</a></li>
                                 <li><a href="php/logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>

@@ -1,26 +1,42 @@
 <?php
+session_start();
 include 'config.php';
 
-if (isset($_GET['id'])) {
-    $book_id = $_GET['id'];
-    $sql = "SELECT books.*, discounts.discount FROM books LEFT JOIN discounts ON books.id = discounts.book_id WHERE books.id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $book_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-    if ($result->num_rows > 0) {
-        $book = $result->fetch_assoc();
-        $discount = isset($book['discount']) ? $book['discount'] : 0;
-        $old_price = $book['price'];
-        $new_price = $old_price - ($old_price * $discount / 100);
-    } else {
-        echo "Книга не найдена.";
+$user_id = $_SESSION['user_id'];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nickname = $_POST['nickname'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $first_name = $_POST['first_name'];
+    $last_name = $_POST['last_name'];
+    $middle_name = $_POST['middle_name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+
+    if ($new_password !== $confirm_password) {
+        echo "Пароли не совпадают.";
         exit();
     }
-} else {
-    echo "Неверный запрос.";
-    exit();
+
+    $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+
+    $stmt = $conn->prepare("UPDATE users SET nickname = ?, password = ? WHERE id = ?");
+    $stmt->bind_param("ssi", $nickname, $hashed_password, $user_id);
+
+    if ($stmt->execute()) {
+        /*echo "Данные успешно обновлены.";*/
+    } else {
+        echo "Ошибка обновления данных: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
 
@@ -29,7 +45,7 @@ if (isset($_GET['id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($book['title']) ? htmlspecialchars($book['title']) : 'Книга не найдена'; ?> - XXXBookShop</title>
+    <title>XXXBookShop</title>
     <link rel="icon" href="../icon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="../icon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/styles.css">
@@ -44,10 +60,10 @@ if (isset($_GET['id'])) {
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
+
         <h1><a href="../index.php"><img src="../images/logo2.png" alt="Logo" class="logo"></a></h1>
-        <div class="auth-container">
-                <?php
-                session_start();
+            <div class="auth-container">
+            <?php
                 include 'config.php';
 
                 if (isset($_SESSION['username'])) {
@@ -73,7 +89,7 @@ if (isset($_GET['id'])) {
             </div>
         </header>
         <main>
-            <aside class="sidebar">
+        <aside class="sidebar">
                 <ul class="sidebar-menu">
                     <li>
                         <i class="fas fa-book"></i>
@@ -84,13 +100,12 @@ if (isset($_GET['id'])) {
                         <a href="#">Категории</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
-                            include '../php/config.php';
                             $genresQuery = "SELECT DISTINCT genre FROM books";
                             $genresResult = $conn->query($genresQuery);
 
                             if ($genresResult->num_rows > 0) {
                                 while ($genreRow = $genresResult->fetch_assoc()) {
-                                    echo '<li><a href="../php/search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
+                                    echo '<li><a href="search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
                                 }
                             } else {
                                 echo '<li>Нет доступных жанров</li>';
@@ -100,32 +115,40 @@ if (isset($_GET['id'])) {
                     </li>
                     <li>
                         <i class="fas fa-tags"></i>
-                        <a href="../php/search.php?discount=true">Акции</a>
+                        <a href="search.php?discount=true">Акции</a>
                     </li>
                 </ul>
             </aside>
-            <section id="book-details">
-                <?php if (isset($book)): ?>
-                    <div class="book-image">
-                        <img src="../images/<?php echo htmlspecialchars($book['image']); ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
-                    </div>
-                    <div class="book-info">
-                        <h2><?php echo htmlspecialchars($book['title']); ?></h2>
-                        <p><strong>Автор:</strong> <?php echo htmlspecialchars($book['author']); ?></p>
-                        <?php if ($discount > 0): ?>
-                            <p><strong>Цена:</strong> <del><?php echo htmlspecialchars($old_price); ?> руб.</del> <?php echo htmlspecialchars($new_price); ?> руб.</p>
-                        <?php else: ?>
-                            <p><strong>Цена:</strong> <?php echo htmlspecialchars($book['price']); ?> руб.</p>
-                        <?php endif; ?>
-                        <p><strong>Описание:</strong> <?php echo htmlspecialchars($book['description']); ?></p>
-                        <p><strong>Жанр:</strong> <?php echo htmlspecialchars($book['genre']); ?></p>
-                        <button class="buy-button">Купить</button>
-                    </div>
-                <?php else: ?>
-                    <p>Книга не найдена.</p>
-                <?php endif; ?>
-            </section>
-        </main>
+
+    <form action="user.php" method="POST">
+    <h2>Изменить данные</h2>
+        <label for="new_username">Новый логин:</label>
+        <input type="text" id="register-nickname" name="nickname" required><br><br>
+
+        <label for="new_nickname">Имя:</label>
+        <input type="text" id="register-first-name" name="first_name" required><br><br>
+
+        <label for="new_nickname">Фамилия:</label>
+        <input type="text" id="register-last-name" name="last_name" required><br><br>
+
+        <label for="new_nickname">Отчество:</label>
+        <input type="text" id="register-middle-name" name="middle_name" required><br><br>
+
+        <label for="new_nickname">Телефон:</label>
+        <input type="text" id="register-phone" name="phone" required><br><br>
+
+        <label for="new_nickname">Почта:</label>
+        <input type="email" id="register-email" name="email" required><br><br>
+
+        <label for="new_password">Новый пароль:</label>
+        <input type="password" id="register-password" name="password" required><br><br>
+
+        <label for="confirm_password">Подтвердите новый пароль:</label>
+        <input type="password" id="register-confirm-password" name="confirm_password" required><br><br>
+
+        <input type="submit" value="Сохранить изменения">
+    </form>
+    </main>
         <footer>
             <p>&copy; 2024 XXXBookShop</p>
         </footer>
@@ -150,3 +173,4 @@ if (isset($_GET['id'])) {
     <script src="../js/scripts.js"></script>
 </body>
 </html>
+

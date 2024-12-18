@@ -32,7 +32,9 @@ if (!empty($query)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты поиска - XXXBookShop</title>
+    <title>XXXBookShop</title>
+    <link rel="icon" href="../icon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="../icon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -40,7 +42,7 @@ if (!empty($query)) {
     <div class="container">
         <header>
         <div class="search-container">
-                    <form id="search-form" action="php/search.php" method="GET">
+                    <form id="search-form" action="search.php" method="GET">
                         <input type="text" id="search-input" name="query" placeholder="Поиск..." required>
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
@@ -56,7 +58,7 @@ if (!empty($query)) {
                             <ul>
                                 <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
                                 <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк</a></li>
-                                <li><a href="../php/logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
+                                <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                             </ul>
                           </div>';
                 } else {
@@ -131,24 +133,18 @@ if (!empty($query)) {
         </footer>
     </div>
     <div id="auth-form" style="display: none;">
-        <form id="login-form" action="../php/login.php" method="POST" style="display: block;">
+        <form id="login-form" action="login.php" method="POST" style="display: block;">
             <h2>Вход</h2>
             <input type="text" id="login-username" name="username" placeholder="Логин или Email" required>
             <input type="password" id="login-password" name="password" placeholder="Пароль" required>
             <button type="submit">Войти</button>
             <button type="button" onclick="showRegisterForm()">Зарегистрироваться</button>
         </form>
-        <form id="register-form" action="../php/register.php" method="POST" style="display: none;">
+        <form id="register-form" action="register.php" method="POST" style="display: none;">
             <h2>Регистрация</h2>
-            <input type="text" id="register-nickname" name="nickname" placeholder="Ник" required>
-            <input type="text" id="register-username" name="username" placeholder="Логин" required>
+            <input type="text" id="register-nickname" name="nickname" placeholder="Логин" required>
             <input type="password" id="register-password" name="password" placeholder="Пароль" required>
             <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Подтвердите пароль" required>
-            <input type="text" id="register-first-name" name="first_name" placeholder="Имя" required>
-            <input type="text" id="register-last-name" name="last_name" placeholder="Фамилия" required>
-            <input type="text" id="register-middle-name" name="middle_name" placeholder="Отчество">
-            <input type="email" id="register-email" name="email" placeholder="Email" required>
-            <input type="text" id="register-phone" name="phone" placeholder="Телефон">
             <button type="submit">Зарегистрироваться</button>
             <button type="button" onclick="showLoginForm()">Войти</button>
         </form>
