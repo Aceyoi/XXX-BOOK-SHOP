@@ -62,11 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     authLink.addEventListener('click', function(event) {
         event.preventDefault();
-        if (userMenu.style.display === 'block') {
-            userMenu.style.display = 'none';
-        } else {
-            userMenu.style.display = 'block';
-        }
+        event.stopPropagation();
+        userMenu.style.display = userMenu.style.display === 'block' ? 'none' : 'block';
     });
 
     // Закрытие панели пользователя при клике вне её

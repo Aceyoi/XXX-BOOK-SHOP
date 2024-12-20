@@ -1,5 +1,7 @@
 <?php
+session_start();
 include 'config.php';
+
 
 if (isset($_GET['id'])) {
     $book_id = $_GET['id'];
@@ -24,6 +26,59 @@ if (isset($_GET['id'])) {
 }
 ?>
 
+                    
+
+
+
+<?php
+include 'config.php';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['buy'])) {
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
+    
+    $user_id = $_SESSION['user_id'];
+
+        // Проверить цену книги с учётом скидки
+        $price_to_pay = $discount > 0 ? $new_price : $old_price;
+
+        // Получить текущий баланс пользователя
+        $stmt = $conn->prepare("SELECT wallet FROM users WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            $wallet = $user['wallet'];
+
+            if ($wallet >= $price_to_pay) {
+                // Списать средства
+                $new_wallet = $wallet - $price_to_pay;
+
+                $update_stmt = $conn->prepare("UPDATE users SET wallet = ? WHERE id = ?");
+                $update_stmt->bind_param("di", $new_wallet, $user_id);
+
+                if ($update_stmt->execute()) {
+                    echo "<script>alert('Поздравляем с покупкой книги! Спасибо за покупку.');</script>";
+                } else {
+                    echo "<script>alert('Ошибка при обработке покупки. Пожалуйста, попробуйте снова.');</script>";
+                }
+
+                $update_stmt->close();
+            } else {
+                echo "<script>alert('Недостаточно средств на вашем балансе. Пополните счёт.');</script>";
+            }
+        } else {
+            echo "<script>alert('Пользователь не найден. Пожалуйста, войдите снова.');</script>";
+        }
+
+        $stmt->close();
+    } 
+?>
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -46,10 +101,18 @@ if (isset($_GET['id'])) {
                 </div>
         <h1><a href="../index.php"><img src="../images/logo2.png" alt="Logo" class="logo"></a></h1>
         <div class="auth-container">
-                <?php
-                session_start();
+        <?php
+        
                 include 'config.php';
 
+                if (!empty($_POST['nickname'])) {
+                    $update_fields[] = "nickname = ?";
+                    $params[] = $_POST['nickname'];
+                
+                    // Обновляем значение в сессии
+                    $_SESSION['username'] = $_POST['nickname'];
+                }
+                
                 if (isset($_SESSION['username'])) {
                     $user_id = $_SESSION['user_id'];
                     $stmt = $conn->prepare("SELECT wallet FROM users WHERE id = ?");
@@ -61,8 +124,10 @@ if (isset($_GET['id'])) {
                     echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
                     echo '<div id="user-menu">
                             <ul>
+                                <li><a href="user.php"> Аккаунт</a></li>
                                 <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
-                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: ' . $user['wallet'] . ' руб.</a></li>
+                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
+                                <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>
                                 <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                             </ul>
                           </div>';
@@ -84,13 +149,13 @@ if (isset($_GET['id'])) {
                         <a href="#">Категории</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
-                            include '../php/config.php';
+                            include 'config.php';
                             $genresQuery = "SELECT DISTINCT genre FROM books";
                             $genresResult = $conn->query($genresQuery);
 
                             if ($genresResult->num_rows > 0) {
                                 while ($genreRow = $genresResult->fetch_assoc()) {
-                                    echo '<li><a href="../php/search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
+                                    echo '<li><a href="search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
                                 }
                             } else {
                                 echo '<li>Нет доступных жанров</li>';
@@ -100,7 +165,7 @@ if (isset($_GET['id'])) {
                     </li>
                     <li>
                         <i class="fas fa-tags"></i>
-                        <a href="../php/search.php?discount=true">Акции</a>
+                        <a href="search.php?discount=true">Акции</a>
                     </li>
                 </ul>
             </aside>
@@ -119,12 +184,16 @@ if (isset($_GET['id'])) {
                         <?php endif; ?>
                         <p><strong>Описание:</strong> <?php echo htmlspecialchars($book['description']); ?></p>
                         <p><strong>Жанр:</strong> <?php echo htmlspecialchars($book['genre']); ?></p>
-                        <button class="buy-button">Купить</button>
+                    <form method="POST" action="">
+                            <input type="hidden" name="buy" value="1">
+                             <button type="submit" class="buy-button">Купить</button>
+                    </form>
                     </div>
                 <?php else: ?>
                     <p>Книга не найдена.</p>
                 <?php endif; ?>
             </section>
+        <div class="slider-container"></div>
         </main>
         <footer>
             <p>&copy; 2024 XXXBookShop</p>

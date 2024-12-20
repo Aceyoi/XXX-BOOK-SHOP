@@ -1,4 +1,6 @@
 <?php
+
+session_start();
 include 'config.php';
 
 $query = isset($_GET['query']) ? $_GET['query'] : '';
@@ -49,15 +51,31 @@ if (!empty($query)) {
                 </div>
         <h1><a href="../index.php"><img src="../images/logo2.png" alt="Logo" class="logo"></a></h1>
         <div class="auth-container">
-                <?php
-                session_start();
+        <?php
 
+                if (!empty($_POST['nickname'])) {
+                    $update_fields[] = "nickname = ?";
+                    $params[] = $_POST['nickname'];
+                
+                    // Обновляем значение в сессии
+                    $_SESSION['username'] = $_POST['nickname'];
+                }
+                
                 if (isset($_SESSION['username'])) {
+                    $user_id = $_SESSION['user_id'];
+                    $stmt = $conn->prepare("SELECT wallet FROM users WHERE id = ?");
+                    $stmt->bind_param("i", $user_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $user = $result->fetch_assoc();
+
                     echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
                     echo '<div id="user-menu">
                             <ul>
+                                <li><a href="user.php"> Аккаунт</a></li>
                                 <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
-                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк</a></li>
+                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
+                                <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>
                                 <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                             </ul>
                           </div>';
@@ -101,6 +119,7 @@ if (!empty($query)) {
             <section id="books">
                 <div id="book-container" class="book-grid">
                     <?php
+                    
                     if ($result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                             $discount = isset($row['discount']) ? $row['discount'] : 0;
@@ -127,6 +146,7 @@ if (!empty($query)) {
                     ?>
                 </div>
             </section>
+        <div class="slider-container"></div>
         </main>
         <footer>
             <p>&copy; 2024 XXXBookShop</p>

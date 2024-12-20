@@ -17,14 +17,6 @@ CREATE TABLE offers (
     description TEXT NOT NULL
 );
 
--- для создания таблицы скидок
-CREATE TABLE discounts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    book_id INT NOT NULL,
-    discount DECIMAL(5, 2) NOT NULL,
-    FOREIGN KEY (book_id) REFERENCES books(id)
-);
-
 -- Создание таблицы books
 CREATE TABLE books (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -35,6 +27,14 @@ CREATE TABLE books (
     genre VARCHAR(255),
     image VARCHAR(255),
 	category VARCHAR(50)
+);
+
+-- для создания таблицы скидок
+CREATE TABLE discounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT NOT NULL,
+    discount DECIMAL(5, 2) NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
 -- Создание таблицы users
@@ -62,12 +62,8 @@ INSERT INTO offers (title, description) VALUES
 ('Новогодние подарки', 'Подарочные сертификаты на книги для ваших близких!'),
 ('Детские сказки', 'Скидки на детские книги и сказки!');           
 
--- new  (Свежая новинка)
--- old  (Классика жанра)
--- best (Лучшее)
-
 -- Заполнение таблицы books данными
-INSERT INTO books (title, author, price, description, genre, image, category) VALUES
+INSERT INTO books (title, author, price, description, genre, image) VALUES
 ('Вегетация', 'Алексей Иванов', 500.00, 'Научно-фантастический роман о машинах-мутантах', 'Фантастика', 'vegetation.jpg'),
 ('Метро 2033', 'Дмитрий Глуховский', 499.00, 'Постапокалиптический роман о жизни в московском метро после ядерной войны', 'Фантастика', 'metro2033.jpg'),
 ('Цветы для Элджернона', 'Дэниел Киз', 199.00, 'Драматический рассказ о научных экспериментах и человеческих отношениях', 'Драма', 'flowers_for_algernon.jpg'),
@@ -122,7 +118,7 @@ INSERT INTO books (title, author, price, description, genre, image, category) VA
 ('Властелин колец: Братство кольца', 'Дж. Р. Р. Толкин', 599.00, 'Первая часть легендарной трилогии о Средиземье', 'Фэнтези', 'fellowship_of_the_ring.jpg'),
 ('Властелин колец: Две крепости', 'Дж. Р. Р. Толкин', 599.00, 'Продолжение эпического путешествия', 'Фэнтези', 'two_towers.jpg'),
 ('Властелин колец: Возвращение короля', 'Дж. Р. Р. Толкин', 599.00, 'Финальная часть трилогии', 'Фэнтези', 'return_of_the_king.jpg'),
-('Хоббит', 'Дж. Р. Р. Толкин', 499.00, 'Предыстория событий 'Властелина колец'', 'Фэнтези', 'hobbit.jpg'),
+('Хоббит', 'Дж. Р. Р. Толкин', 499.00, 'Предыстория событий Властелина колец', 'Фэнтези', 'hobbit.jpg'),
 ('Пикник на обочине', 'Аркадий и Борис Стругацкие', 299.00, 'Роман о загадочной Зоне и сталкерах', 'Фантастика', 'roadside_picnic.jpg'),
 ('Трудно быть богом', 'Аркадий и Борис Стругацкие', 349.00, 'Философский роман о наблюдателях на другой планете', 'Фантастика', 'hard_to_be_god.jpg'),
 ('Песнь льда и огня: Игра престолов', 'Джордж Р. Р. Мартин', 699.00, 'Первая часть эпической саги о борьбе за Железный трон', 'Фэнтези', 'game_of_thrones.jpg'),
@@ -138,12 +134,14 @@ INSERT INTO books (title, author, price, description, genre, image, category) VA
 ('Таинственный остров', 'Жюль Верн', 349.00, 'История выживания на необитаемом острове', 'Приключения', 'mysterious_island.jpg'),
 ('20 000 лье под водой', 'Жюль Верн', 349.00, 'Приключения капитана Немо и его подводного корабля', 'Приключения', '20000_leagues.jpg'),
 ('Убик', 'Филип К. Дик', 499.00, 'Роман о реальности и восприятии времени', 'Фантастика', 'ubik.jpg'),
-('Человек в высоком замке', 'Филип К. Дик', 499.00, 'Альтернативная история победы нацистов', 'Фантастика', 'man_in_high_castle.jpg');
+('Человек в высоком замке', 'Филип К. Дик', 499.00, 'Альтернативная история победы нацистов', 'Фантастика', 'man_in_high_castle.jpg'),
+('Моя борьба', 'Адольф Гитлер', 999.99, 'Великая литература современности', 'Классическая литература', '1.jpg'),
+('1984', 'Джордж Оруэлл', 999.99, 'Великая литература современности', 'Классическая литература', '2.jpg');
 
 -- Пример обновления для книг с определенными id
-UPDATE books SET category = 'new' WHERE id IN (1, 26, 43);
-UPDATE books SET category = 'best' WHERE id IN (22, 23, 24, 52, 55);
-UPDATE books SET category = 'old' WHERE id IN (2, 12, 14, 18, 34, 35, 46, 56, 63, 64, 67);
+UPDATE books SET category = 'New' WHERE id IN (1, 26, 43);
+UPDATE books SET category = 'Best' WHERE id IN (22, 23, 24, 52, 55);
+UPDATE books SET category = 'Old' WHERE id IN (2, 12, 14, 18, 34, 35, 46, 56, 63, 64, 67);
 
 
 

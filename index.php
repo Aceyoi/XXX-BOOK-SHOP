@@ -38,7 +38,8 @@
                             <ul>
                                 <li><a href="php/user.php"> Аккаунт</a></li>
                                 <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
-                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: ' . $user['wallet'] . ' руб.</a></li>
+                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
+                                <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>
                                 <li><a href="php/logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                             </ul>
                           </div>';
@@ -125,7 +126,7 @@
                 <section id="books">
                     <div id="book-container" class="book-grid">
                         <?php
-                        $categories = ["new", "best", "old"];
+                        $categories = ["New", "best", "old"];
                         foreach ($categories as $category) {
                             echo '<div class="category">';
                             echo '<h2>' . ucfirst($category) . '</h2>';
