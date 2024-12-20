@@ -11,4 +11,6 @@
   - register.php
   - scripts.js
   - style.css
-  
+- Дополнителная информация
+  - Использовался XAMPP Control Panel v3.3.0
+  - MySQL сервер, для создания и заполнения БД использовать Base.txt
