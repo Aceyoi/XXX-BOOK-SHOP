@@ -8,6 +8,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    width: 100%;
     
 }
 
@@ -297,17 +298,6 @@ main {
     cursor: pointer;
 }
 
-footer {
-    background-color: #8ac9f4;
-    color: white;
-    text-align: center;
-    /*padding: 1rem;*/
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-    position: relative; /* Изменено на relative */
-}
-
 /* Стили для книги */
 #book-details {
     display: flex;
@@ -432,3 +422,69 @@ footer {
     height: auto; /* Сохраняет пропорции изображения */
 }
 
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Адаптивный дизайн */
+@media (max-width: 768px) {
+    header, .sidebar {
+        padding: 1rem;
+    }
+
+    main {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 95%;
+        height: 80px;
+    }
+
+    #slider-and-offers {
+        flex-direction: column;
+        height: 360px;
+    }
+
+    #hot-offers {
+        flex-direction: column;
+        gap: 0rem;
+    }
+
+    #slider{
+        display: none;
+    }
+
+    .offer {
+        margin: 5px;
+        width: 350px;
+    }
+
+    .auth-container{
+        top: 10%;
+    }
+
+    .search-container{
+        display: none;
+    }
+}
+
+footer {
+    background-color: #8ac9f4;
+    color: white;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    position: relative; /* Изменено на relative */
+}

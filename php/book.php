@@ -254,13 +254,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['set_discount'])) {
                     <div class="book-info">
                         <h2><?php echo htmlspecialchars($book['title']); ?></h2>
                         <p><strong>Автор:</strong> <?php echo htmlspecialchars($book['author']); ?></p>
+                        <p><strong>Жанр:</strong> <?php echo htmlspecialchars($book['genre']); ?></p>
+                        <p><strong>Описание:</strong> <?php echo htmlspecialchars($book['description']); ?></p>
+                        <?php echo '<h3 class="fas fa-star">' . htmlspecialchars($book['average_rating']) . '</h3>';?>
                         <?php if ($discount > 0): ?>
                             <p><strong>Цена:</strong> <del><?php echo htmlspecialchars($old_price); ?> руб.</del> <?php echo htmlspecialchars($new_price); ?> руб.</p>
                         <?php else: ?>
                             <p><strong>Цена:</strong> <?php echo htmlspecialchars($book['price']); ?> руб.</p>
                         <?php endif; ?>
-                        <p><strong>Описание:</strong> <?php echo htmlspecialchars($book['description']); ?></p>
-                        <p><strong>Жанр:</strong> <?php echo htmlspecialchars($book['genre']); ?></p>
                         <form method="POST">
                             <button type="submit" name="buy_book">Купить</button>
                         </form>
