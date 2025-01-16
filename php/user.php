@@ -29,7 +29,6 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $update_fields = [];
     $params = [];
@@ -89,11 +88,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt->close();
     }
-
-
 }
-?>
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['make_editor'])) {
+    // Проверяем, что пользователь уже не является редактором
+    $stmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
 
+        // Обновляем роль пользователя
+        $stmt = $conn->prepare("UPDATE users SET role = 'editor' WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        if ($stmt->execute()) {
+            $_SESSION['user_role'] = 'editor'; // Обновляем данные в сессии
+        } else {
+            echo "Ошибка: " . $stmt->error;
+        }
+}
+
+?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -114,42 +128,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
-
         <h1><a href="../index.php"><img src="../images/logo2.png" alt="Logo" class="logo"></a></h1>
             <div class="auth-container">
             <?php
-                include 'config.php';
+        
+        include 'config.php';
 
-                if (!empty($_POST['nickname'])) {
-                    $update_fields[] = "nickname = ?";
-                    $params[] = $_POST['nickname'];
-                
-                    // Обновляем значение в сессии
-                    $_SESSION['username'] = $_POST['nickname'];
-                }
-                
-                if (isset($_SESSION['username'])) {
-                    $user_id = $_SESSION['user_id'];
-                    $stmt = $conn->prepare("SELECT wallet FROM users WHERE id = ?");
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    $user = $result->fetch_assoc();
+        if (!empty($_POST['nickname'])) {
+            $update_fields[] = "nickname = ?";
+            $params[] = $_POST['nickname'];
+        
+            // Обновляем значение в сессии
+            $_SESSION['username'] = $_POST['nickname'];
+        }
+        
+        if (isset($_SESSION['username'])) {
+            $user_id = $_SESSION['user_id'];
+            $stmt = $conn->prepare("SELECT role, wallet FROM users WHERE id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            $user_role = $user['role'];
 
-                    echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
-                    echo '<div id="user-menu">
-                            <ul>
-                                <li><a href="user.php"> Аккаунт</a></li>
-                                <li><a href="#"><i class="fas fa-shopping-cart"></i> Корзина</a></li>
-                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
-                                <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>
-                                <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
-                            </ul>
-                          </div>';
-                } else {
-                    echo '<span id="auth-link"><a href="#" onclick="showAuthForm()"><i class="fas fa-user"></i> Войти</a></span>';
-                }
-                ?>
+            echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
+            echo '<div id="user-menu">
+                    <ul>
+                        <li><a href="user.php"> Аккаунт</a></li>
+                        <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
+                        <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>';
+            if ($user_role === 'editor' || $user_role === 'admin') {
+                echo '<li><a href="editor.php"><i class="fas fa-plus-circle"></i> Выставить книгу</a></li>';}
+                echo '<li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
+                    </ul>
+                  </div>';
+        } else {
+            echo '<span id="auth-link"><a href="#" onclick="showAuthForm()"><i class="fas fa-user"></i> Войти</a></span>';
+        }
+        ?>
             </div>
         </header>
         <main>
@@ -179,13 +195,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </li>
                     <li>
                         <i class="fas fa-tags"></i>
-                        <a href="search.php?discount=true">Акции</a>
+                        <a href="#">Акции</a>
+                        <ul class="submenu" id="categories-submenu">
+                        <?php
+                            $genresQuery = "SELECT DISTINCT discount FROM books";
+                            $genresResult = $conn->query($genresQuery);
+
+                            if ($genresResult->num_rows > 0) {
+                                    echo '<li><a href="search.php?discount=true'  . '" class="fas fa-tags"> ' . "Скидки" . '</a></li>';
+                            } else {
+                                echo '<li>Нет доступных акций</li>';
+                            }
+                            ?>
+                        </ul>
                     </li>
                 </ul>
             </aside>
-
-
-
             <form action="user.php" method="POST" class="user">
             <h2>    
                 <?php  echo isset($_SESSION['last_name']) ? htmlspecialchars($_SESSION['last_name']) : 'Не указано';?><br><br>
@@ -197,7 +222,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="email">Почта:</label>
                 <?php echo isset($_SESSION['email']) ? htmlspecialchars($_SESSION['email']) : 'Не указана'; ?><br><br>
             </form>
-
     <form action="user.php" method="POST" class="user">
     <h2>Изменить данные</h2>
         <label for="new_username">Новый логин:</label>
@@ -232,37 +256,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="text" id="money" name="wallet" ><br><br>
 
         <input type="submit" value="oy yes">
-    </form>
 
-
-
+    <h2>Стать редактором</h2>
+    <input type="hidden" name="make_editor" value="1">
+    <input type="submit" value="Да">
+</form>
 
     <div class="slider-container"></div>
-
-
-
-
     </main>
         <footer>
             <p>&copy; 2024 XXXBookShop</p>
         </footer>
-    </div>
-    <div id="auth-form" style="display: none;">
-        <form id="login-form" action="login.php" method="POST" style="display: block;">
-            <h2>Вход</h2>
-            <input type="text" id="login-username" name="username" placeholder="Логин или Email" required>
-            <input type="password" id="login-password" name="password" placeholder="Пароль" required>
-            <button type="submit">Войти</button>
-            <button type="button" onclick="showRegisterForm()">Зарегистрироваться</button>
-        </form>
-        <form id="register-form" action="register.php" method="POST" style="display: none;">
-            <h2>Регистрация</h2>
-            <input type="text" id="register-nickname" name="nickname" placeholder="Логин" required>
-            <input type="password" id="register-password" name="password" placeholder="Пароль" required>
-            <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Подтвердите пароль" required>
-            <button type="submit">Зарегистрироваться</button>
-            <button type="button" onclick="showLoginForm()">Войти</button>
-        </form>
     </div>
     <script src="../js/scripts.js"></script>
 </body>

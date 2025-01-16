@@ -79,8 +79,23 @@ document.addEventListener('DOMContentLoaded', function() {
     searchForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const query = document.getElementById('search-input').value;
-        window.location.href = `php/search.php?query=${encodeURIComponent(query)}`;
+    
+        fetch(`search.php?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `search.php?query=${encodeURIComponent(query)}`;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при выполнении запроса.');
+            });
     });
+    
+    
 
     // Обработка фильтрации по жанру
     document.querySelectorAll('.genre-link').forEach(link => {
