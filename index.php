@@ -59,7 +59,7 @@
                     </li>
                     <li id="categories-item">
                         <i class="fas fa-list"></i>
-                        <a href="#">Категории</a>
+                        <a href="#">Жанры</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
                             $genresQuery = "SELECT DISTINCT genre FROM books";
@@ -75,7 +75,7 @@
                             ?>
                         </ul>
                     </li>
-                    <li>
+                    <li id="categories-item">
                         <i class="fas fa-tags"></i>
                         <a href="#">Акции</a>
                         <ul class="submenu" id="categories-submenu">
@@ -84,7 +84,7 @@
                             $genresResult = $conn->query($genresQuery);
 
                             if ($genresResult->num_rows > 0) {
-                                    echo '<li><a href="php/search.php?discount=true'  . '" class="fas fa-tags"> ' . "Скидки" . '</a></li>';
+                                    echo '<li><a href="php/search.php?discount=true" class="fas fa-tags">Скидки</a></li>';
                             } else {
                                 echo '<li>Нет доступных акций</li>';
                             }
@@ -151,19 +151,18 @@
                             $stmt->execute();
                             $result = $stmt->get_result();
                             while ($row = $result->fetch_assoc()) {
-                                $discount = $row['discount'] ?? 0;
-                                $old_price = $row['price'];
-                                $new_price = $old_price - ($old_price * $discount / 100);
                                 echo '<div class="book">';
                                 echo '<a href="php/book.php?id=' . $row['id'] . '">';
                                 echo '<img src="php/images/' . htmlspecialchars($row['image']) . '" alt="' . htmlspecialchars($row['title']) . '" class="book-img">';
                                 echo '</a>';
                                 echo '<h3>' . htmlspecialchars($row['title']) . '</h3>';
                                 echo '<p>' . htmlspecialchars($row['author']) . '</p>';
-                                if ($discount > 0) {
+                                if ($row['discount'] > 0) {
+                                    $old_price = $row['price'];
+                                    $new_price = $old_price - ($old_price * $row['discount'] / 100);
                                     echo '<p><del>' . $old_price . ' руб.</del> ' . $new_price . ' руб.</p>';
                                 } else {
-                                    echo '<p>' . $old_price . ' руб.</p>';
+                                    echo '<p>' . $row['price'] . ' руб.</p>';
                                 }
                                 
                                 echo '<h3 class="fas fa-star">' . htmlspecialchars($row['average_rating']) . '</h3>';
