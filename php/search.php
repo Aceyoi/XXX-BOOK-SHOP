@@ -1,52 +1,28 @@
 <?php
-session_start(); // Убедимся, что сессия стартует
-require_once 'config.php'; // Используем require_once для предотвращения дублирования
+session_start();
+include 'config.php';
 
-// Получаем параметры из URL
 $query = isset($_GET['query']) ? $_GET['query'] : '';
 $genre = isset($_GET['genre']) ? $_GET['genre'] : '';
-$discount = isset($_GET['discount']) && $_GET['discount'] === 'true'; // Исправление для параметра discount
+$discount = isset($_GET['discount']) ? $_GET['discount'] : '';
 
-// Переменная для результата запроса
-$result = null;
-
-// Обработка поиска по названию, автору или жанру
+$sql = "SELECT * FROM books WHERE 1=1";
+$params = [];
 if (!empty($query)) {
-    $sql = "SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?";
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        die('Ошибка подготовки запроса: ' . $conn->error);
-    }
-    $likeQuery = '%' . $query . '%';
-    $stmt->bind_param("sss", $likeQuery, $likeQuery, $likeQuery);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} elseif (!empty($genre)) {
-    $sql = "SELECT * FROM books WHERE genre = ?";
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        die('Ошибка подготовки запроса: ' . $conn->error);
-    }
-    $stmt->bind_param("s", $genre);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} elseif ($discount) {
-    $sql = "SELECT * FROM books WHERE discount IS NOT NULL";
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        die('Ошибка подготовки запроса: ' . $conn->error);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-} else {
-    $sql = "SELECT * FROM books";
-    $result = $conn->query($sql);
+    $sql .= " AND (title LIKE ? OR author LIKE ?)";
+    $params[] = "%$query%";
+    $params[] = "%$query%";
 }
 
-// Убедимся, что результат существует
-if (!$result) {
-    die('Ошибка выполнения запроса: ' . $conn->error);
+if (!empty($genre)) {
+    $sql .= " AND genre = ?";
+    $params[] = $genre;
 }
+
+if (!empty($discount)) {
+    $sql .= " AND discount > 0";
+}
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -71,48 +47,59 @@ if (!$result) {
             </div>
             <h1><a href="../index.php"><img src="../images/logo2.png" alt="Logo" class="logo"></a></h1>
             <div class="auth-container">
-            <?php
-            // Проверка авторизации
-            if (isset($_SESSION['username'])) {
-                $user_id = $_SESSION['user_id'];
-                $stmt = $conn->prepare("SELECT role, wallet FROM users WHERE id = ?");
-                $stmt->bind_param("i", $user_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $user = $result->fetch_assoc();
-                $user_role = $user['role'];
+                <?php
+                include 'config.php';
 
-                echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
-                echo '<div id="user-menu">
-                        <ul>
-                            <li><a href="user.php"> Аккаунт</a></li>
-                            <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
-                            <li><a href="#"> ' . htmlspecialchars($user['wallet']) . ' руб.</a></li>';
-                if ($user_role === 'editor' || $user_role === 'admin') {
-                    echo '<li><a href="editor.php"><i class="fas fa-plus-circle"></i> Выставить книгу</a></li>';
+                if (!empty($_POST['nickname'])) {
+                    $update_fields[] = "nickname = ?";
+                    $params[] = $_POST['nickname'];
+
+                    // Обновляем значение в сессии
+                    $_SESSION['username'] = $_POST['nickname'];
                 }
-                echo '<li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
-                        </ul>
-                    </div>';
-            } else {
-                echo '<span id="auth-link"><a href="#" onclick="showAuthForm()"><i class="fas fa-user"></i> Войти</a></span>';
-            }
-            ?>
+
+                if (isset($_SESSION['username'])) {
+                    $user_id = $_SESSION['user_id'];
+                    $stmt = $conn->prepare("SELECT role, wallet FROM users WHERE id = ?");
+                    $stmt->bind_param("i", $user_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $user = $result->fetch_assoc();
+                    $user_role = $user['role'];
+
+                    echo '<span id="auth-link"><i class="fas fa-user"></i> ' . $_SESSION['username'] . '</span>';
+                    echo '<div id="user-menu">
+                            <ul>
+                                <li><a href="user.php"> Аккаунт</a></li>
+                                <li><a href="#"><i class="fas fa-wallet"></i> Кошелёк: </a></li>
+                                <li><a href="#"></i> ' . $user['wallet'] . ' руб.</a></li>';
+                    if ($user_role === 'editor' || $user_role === 'admin') {
+                        echo '<li><a href="editor.php"><i class="fas fa-plus-circle"></i> Выставить книгу</a></li>';
+                    }
+                    echo '<li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
+                            </ul>
+                          </div>';
+                } else {
+                    echo '<span id="auth-link"><a href="#" onclick="showAuthForm()"><i class="fas fa-user"></i> Войти</a></span>';
+                }
+                ?>
             </div>
         </header>
-
         <main>
             <aside class="sidebar">
                 <ul class="sidebar-menu">
-                    <li><i class="fas fa-book"></i><a href="../index.php">Книги</a></li>
+                    <li>
+                        <i class="fas fa-book"></i>
+                        <a href="../index.php">Книги</a>
+                    </li>
                     <li id="categories-item">
                         <i class="fas fa-list"></i>
-                        <a href="#">Категории</a>
+                        <a href="#">Жанры</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
-                            // Генерация списка жанров
                             $genresQuery = "SELECT DISTINCT genre FROM books";
                             $genresResult = $conn->query($genresQuery);
+
                             if ($genresResult->num_rows > 0) {
                                 while ($genreRow = $genresResult->fetch_assoc()) {
                                     echo '<li><a href="search.php?genre=' . urlencode($genreRow['genre']) . '" class="genre-link"><i class="fas fa-book-open"></i> ' . htmlspecialchars($genreRow['genre']) . '</a></li>';
@@ -126,74 +113,73 @@ if (!$result) {
                     <li>
                         <i class="fas fa-tags"></i>
                         <a href="#">Акции</a>
-                        <ul class="submenu">
-                            <li><a href="search.php?discount=true" class="fas fa-tags"> Скидки</a></li>
+                        <ul class="submenu" id="categories-submenu">
+                        <?php
+                            $genresQuery = "SELECT DISTINCT discount FROM books";
+                            $genresResult = $conn->query($genresQuery);
+
+                            if ($genresResult->num_rows > 0) {
+                                    echo '<li><a href="search.php?discount=true'  . '" class="fas fa-tags"> ' . "Скидки" . '</a></li>';
+                            } else {
+                                echo '<li>Нет доступных акций</li>';
+                            }
+                            ?>
                         </ul>
                     </li>
                 </ul>
             </aside>
-
+        <section id="content">
             <section id="books">
-                <div id="book-container" class="book-grid">
-                <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        $discount = isset($row['discount']) ? $row['discount'] : 0;
-                        $old_price = $row['price'];
-                        $new_price = $old_price - ($old_price * $discount / 100);
-                        $imagePath = '../images/' . $row['image'];
+                    <div id="book-container" class="book-grid">
+                        <?php
 
-                        // Проверка существования изображения
-                        if (!file_exists($imagePath)) {
-                            $imagePath = '../images/default.jpg'; // Путь к изображению по умолчанию
-                        }
-                        foreach ($books as $book) {
-                        echo '<div class="book">';
-                        echo '<a href="book.php?id=' . $book['id'] . '">';
-                        echo '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($book['title']) . '">';
-                        echo '</a>';
-                        echo '<h3>' . htmlspecialchars($book["title"]) . '</h3>';
-                        echo '<p>' . htmlspecialchars($book['author']) . '</p>';
+                        echo '<div class="category">';
                         if ($discount > 0) {
-                            echo '<p><del>' . htmlspecialchars($old_price) . ' руб.</del> ' . htmlspecialchars($new_price) . ' руб.</p>';
-                        } else {
-                            echo '<p>' . htmlspecialchars($book['price']) . ' руб.</p>';
+                        echo '<h2>  Акции  </h2>';
                         }
-                        echo '<p>' . htmlspecialchars($book['description']) . '</p>';
-                        echo '<p>' . htmlspecialchars($book['genre']) . '</p>';
-                        echo '</div>';
-                    }}
-                } else {
-                    echo 'Книги не найдены.';
-                }
-                ?>
-                </div>
-            </section>
-        </main>
+                        else {
+                        echo '<h2>' . htmlspecialchars($genre) . '</h2>';
+                        }
+                        echo '<div class="book-grid">';
 
+                        $stmt = $conn->prepare($sql);
+                        if ($params) {
+                            $stmt->bind_param(str_repeat("s", count($params)), ...$params);
+                        }
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo '<div class="book">';
+                                    echo '<a href="book.php?id=' . $row['id'] . '">';
+                                    echo '<img src="images/' . htmlspecialchars($row['image']) . '" alt="' . htmlspecialchars($row['title']) . '">';
+                                    echo '</a>';
+                                    echo '<h3>' . htmlspecialchars($row['title']) . '</h3>';
+                                    echo '<p>' . htmlspecialchars($row['author']) . '</p>';
+                                    if ($row['discount'] > 0) {
+                                        $old_price = $row['price'];
+                                        $new_price = $old_price - ($old_price * $row['discount'] / 100);
+                                        echo '<p><del>' . $old_price . ' руб.</del> ' . $new_price . ' руб.</p>';
+                                    } else {
+                                        echo '<p>' . $row['price'] . ' руб.</p>';
+                                    }
+                                    echo '<h3 class="fas fa-star">' . htmlspecialchars($row['average_rating']) . '</h3>';
+                                    echo '</div>';
+                                }
+                            } else {
+                                echo '<p>Ничего не найдено.</p>';
+                            }
+                        ?>
+                    </div>
+                </section>
+        </section>
+
+            <div class="slider-container"></div>
+        </main>
         <footer>
             <p>&copy; 2024 XXXBookShop</p>
         </footer>
     </div>
-
-    <div id="auth-form" style="display: none;">
-        <form id="login-form" action="login.php" method="POST" style="display: block;">
-            <h2>Вход</h2>
-            <input type="text" id="login-username" name="username" placeholder="Логин или Email" required>
-            <input type="password" id="login-password" name="password" placeholder="Пароль" required>
-            <button type="submit">Войти</button>
-            <button type="button" onclick="showRegisterForm()">Зарегистрироваться</button>
-        </form>
-        <form id="register-form" action="register.php" method="POST" style="display: none;">
-            <h2>Регистрация</h2>
-            <input type="text" id="register-nickname" name="nickname" placeholder="Логин" required>
-            <input type="password" id="register-password" name="password" placeholder="Пароль" required>
-            <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Подтвердите пароль" required>
-            <button type="submit">Зарегистрироваться</button>
-            <button type="button" onclick="showLoginForm()">Войти</button>
-        </form>
-    </div>
-
     <script src="../js/scripts.js"></script>
 </body>
 </html>

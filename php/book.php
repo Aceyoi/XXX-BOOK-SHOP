@@ -110,6 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rate'])) {
         exit();
     }
 
+
+
     $rating = intval($_POST['rating']);
     $review = trim($_POST['review']);
     $user_id = $_SESSION['user_id'];
@@ -223,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['set_discount'])) {
                     </li>
                     <li id="categories-item">
                         <i class="fas fa-list"></i>
-                        <a href="#">Категории</a>
+                        <a href="#">Жанры</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
                             $genresQuery = "SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND genre != ''";
@@ -263,8 +265,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['set_discount'])) {
                             <p><strong>Цена:</strong> <?php echo htmlspecialchars($book['price']); ?> руб.</p>
                         <?php endif; ?>
                         <form method="POST">
-                            <button type="submit" name="buy_book">Купить</button>
+                        <?php
+                        if (isset($_SESSION['username'])) {
+                            echo '<button type="submit" name="buy_book">Купить</button>';} else {
+                            echo '<a href="#" onclick="showAuthForm()"><button type="submit" name="buy_book">Купить</button></a>';
+                            }
+                        ?>
                         </form>
+
+
+
                         <?php if ($user_role === 'admin'): ?>
                             <form method="POST">
                                 <label for="discount">Установить скидку (%):</label>
@@ -283,7 +293,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['set_discount'])) {
                             <input type="number" id="rating" name="rating" min="1" max="5" required>
                             <label for="review">Отзыв:</label>
                             <textarea id="review" name="review" required></textarea>
-                            <button type="submit" name="rate">Оставить отзыв</button>
+                            <?php
+                            if (isset($_SESSION['username'])) {
+                                echo '<button type="submit" name="buy_book">Оставить отзыв</button>';} else {
+                                echo '<a href="#" onclick="showAuthForm()"><button type="submit" name="buy_book">Оставить отзыв</button></a>';
+                                }
+                            ?>
                         </form>
 
                         <h3>Отзывы:</h3>

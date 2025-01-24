@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['make_editor'])) {
                     </li>
                     <li id="categories-item">
                         <i class="fas fa-list"></i>
-                        <a href="#">Категории</a>
+                        <a href="#">Жанры</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
                             $genresQuery = "SELECT DISTINCT genre FROM books";

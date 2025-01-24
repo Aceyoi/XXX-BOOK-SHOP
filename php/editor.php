@@ -51,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         echo "<p style='color:red;'>Ошибка: изображение или файл книги не были загружены!</p>";
     }
-        $stmt->close();
 }
 
 
@@ -143,7 +142,7 @@ if ($user_id) {
                     </li>
                     <li id="categories-item">
                         <i class="fas fa-list"></i>
-                        <a href="#">Категории</a>
+                        <a href="#">Жанры</a>
                         <ul class="submenu" id="categories-submenu">
                             <?php
                             $genresQuery = "SELECT DISTINCT genre FROM books";
@@ -192,7 +191,14 @@ if ($user_id) {
                 <textarea id="description" name="description"></textarea><br></h3>
 
                 <h3><label for="genre">Жанр:</label>
-                <input type="text" id="genre" name="genre"><br></h3>
+                <select id="genre" name="genre">
+                    <option value="Современная проза">Современная проза</option>
+                    <option value="Фантастика">Фантастика</option>
+                    <option value="Фэнтези">Фэнтези</option>
+                    <option value="Детектив">Детектив</option>
+                    <option value="Триллер">Триллер</option>
+                    <option value="Любовные романы">Любовные романы</option>
+                </select><br></h3>
 
                 <h3><label for="image_file">Изображение книги:</label>
                 <input type="file" id="image_file" name="image_file" accept="image/*"><br></h3>
